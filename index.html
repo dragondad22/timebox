@@ -883,27 +883,33 @@ function brightenColor(hex) {
 }
 
 function renderSummary() {
+  const DAY_SLOTS = 96; // 24h × 4 slots/h
   const totals = {};
   entries.forEach(e => {
     const slots = e.endSlot - e.startSlot + 1;
     totals[e.name] = (totals[e.name] || 0) + slots;
   });
   const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-  const totalSlots = sorted.reduce((s, [, v]) => s + v, 0);
+  const loggedSlots = sorted.reduce((s, [, v]) => s + v, 0);
+  const untrackedSlots = DAY_SLOTS - loggedSlots;
 
   const legend = document.getElementById('summaryLegend');
   const canvas = document.getElementById('summaryCanvas');
   const ctx = canvas.getContext('2d');
 
-  if (totalSlots === 0) {
+  if (loggedSlots === 0) {
     canvas.style.display = 'none';
     legend.innerHTML = '<div class="summary-empty">No entries for this day.</div>';
     return;
   }
 
+  // Build chart slices: tracked categories + untracked remainder
+  const chartData = [...sorted];
+  if (untrackedSlots > 0) chartData.push(['Untracked', untrackedSlots]);
+
   canvas.style.display = '';
   const dpr = window.devicePixelRatio || 1;
-  const size = 200;
+  const size = 220;
   canvas.width = size * dpr;
   canvas.height = size * dpr;
   canvas.style.width = size + 'px';
@@ -913,48 +919,73 @@ function renderSummary() {
 
   const cx = size / 2, cy = size / 2;
   const outerR = size / 2 - 8;
-  const innerR = outerR * 0.52;
+  const innerR = outerR * 0.50;
+  const labelR  = (innerR + outerR) / 2;
 
+  // Pass 1: draw slices
   let angle = -Math.PI / 2;
-  sorted.forEach(([name, slots]) => {
-    const cat = catByName(name);
-    const sweep = (slots / totalSlots) * Math.PI * 2;
+  const slices = chartData.map(([name, slots]) => {
+    const sweep = (slots / DAY_SLOTS) * Math.PI * 2;
+    const color = name === 'Untracked' ? '#323438' : brightenColor(catByName(name).color);
     ctx.beginPath();
     ctx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
     ctx.arc(cx, cy, outerR, angle, angle + sweep);
     ctx.arc(cx, cy, innerR, angle + sweep, angle, true);
     ctx.closePath();
-    ctx.fillStyle = brightenColor(cat.color);
+    ctx.fillStyle = color;
     ctx.fill();
     ctx.strokeStyle = '#111214';
     ctx.lineWidth = 2;
     ctx.stroke();
+    const mid = angle + sweep / 2;
     angle += sweep;
+    return { name, slots, mid, color };
   });
 
-  const totalMins = totalSlots * 15;
-  const totalHours = (totalMins / 60).toFixed(1);
+  // Pass 2: draw slice labels (skip very small slices < 8%)
+  slices.forEach(({ name, slots, mid }) => {
+    const pct = slots / DAY_SLOTS;
+    if (pct < 0.08) return;
+    const lx = cx + Math.cos(mid) * labelR;
+    const ly = cy + Math.sin(mid) * labelR;
+    const mins = slots * 15;
+    const timeStr = mins >= 60 ? (mins / 60).toFixed(1) + 'h' : mins + 'min';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.font = `bold 10px 'IBM Plex Mono', monospace`;
+    ctx.fillText(Math.round(pct * 100) + '%', lx, ly - 5.5);
+    ctx.font = `9px 'IBM Plex Mono', monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.60)';
+    ctx.fillText(timeStr, lx, ly + 6);
+  });
+
+  // Center text
+  const loggedHours = (loggedSlots * 15 / 60).toFixed(1);
   ctx.fillStyle = '#e8e6e1';
-  ctx.font = `bold 22px 'IBM Plex Mono', monospace`;
+  ctx.font = `bold 20px 'IBM Plex Mono', monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(totalHours + 'h', cx, cy - 8);
-  ctx.font = `10px 'IBM Plex Mono', monospace`;
+  ctx.fillText(loggedHours + 'h', cx, cy - 8);
+  ctx.font = `9px 'IBM Plex Mono', monospace`;
   ctx.fillStyle = '#555860';
-  ctx.fillText('logged', cx, cy + 10);
+  ctx.fillText('logged', cx, cy + 9);
 
+  // Legend
   legend.innerHTML = '';
-  sorted.forEach(([name, slots]) => {
-    const cat = catByName(name);
+  chartData.forEach(([name, slots]) => {
+    const isUntracked = name === 'Untracked';
+    const cat = isUntracked ? null : catByName(name);
+    const swatchColor = isUntracked ? '#323438' : brightenColor(cat.color);
     const mins = slots * 15;
-    const pct = Math.round(slots / totalSlots * 100);
+    const pct = Math.round(slots / DAY_SLOTS * 100);
     const timeStr = mins >= 60 ? (mins / 60).toFixed(1) + 'h' : mins + 'min';
     const row = document.createElement('div');
     row.className = 'legend-row';
     row.innerHTML = `
-      <div class="legend-swatch" style="background:${brightenColor(cat.color)}"></div>
-      <span class="legend-name">${cat.emoji} ${name}</span>
-      <span class="legend-time">${timeStr}</span>
+      <div class="legend-swatch" style="background:${swatchColor};border:1px solid rgba(255,255,255,0.1)"></div>
+      <span class="legend-name" style="${isUntracked ? 'color:var(--muted)' : ''}">${isUntracked ? '· Untracked' : `${cat.emoji} ${name}`}</span>
+      <span class="legend-time" style="${isUntracked ? 'color:var(--muted)' : ''}">${timeStr}</span>
       <span class="legend-pct">${pct}%</span>
     `;
     legend.appendChild(row);
