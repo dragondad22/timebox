@@ -217,7 +217,7 @@ header {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
-.eb-emoji { font-size: 13px; flex-shrink: 0; line-height: 1; width: 18px; text-align: center; }
+.eb-emoji { font-size: 13px; flex-shrink: 0; line-height: 1; }
 .eb-name  { font-size: 10px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
 .eb-time  { font-size: 9px; color: rgba(255,255,255,0.4); flex-shrink: 0; }
 .eb-del {
@@ -518,7 +518,7 @@ async function fetchDayEvents(date) {
       .map(ev => {
         const body  = ev.summary.slice(TB_PREFIX.length);
         const emoji = [...body][0];                       // first char (handles multi-byte emoji)
-        const name  = body.slice([...body][0].length + ([...body][1] === ' ' ? 2 : 1)).trim();
+        const name  = body.slice([...body][0].length + ([...body][1] === ' ' ? 1 : 0)).trim();
         const startD = new Date(ev.start.dateTime);
         const endD   = new Date(ev.end.dateTime);
         const endSlot = Math.max(dateToSlot(startD), dateToSlot(endD) - 1);
