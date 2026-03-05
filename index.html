@@ -329,19 +329,27 @@ header {
 .summary-btn.active { border-color: var(--accent); color: var(--accent); }
 
 #summaryPanel {
-  display: none; flex-direction: column; align-items: center;
-  flex: 1; overflow-y: auto; padding: 24px 16px; gap: 20px;
+  display: none; flex-direction: column;
+  flex: 1; overflow-y: auto;
 }
 #summaryPanel.visible { display: flex; }
 
-.summary-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 40px 0; }
+.summary-chart-area { display: flex; justify-content: center; padding: 20px 16px 12px; }
+.summary-controls {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.untracked-toggle { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); cursor: pointer; letter-spacing: 0.04em; }
+.untracked-toggle input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
 
-.summary-legend { width: 100%; display: flex; flex-direction: column; gap: 8px; }
-.legend-row { display: flex; align-items: center; gap: 10px; }
+.summary-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 40px 16px; }
+
+.summary-legend { width: 100%; display: flex; flex-direction: column; }
+.legend-row { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--border); }
 .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 .legend-name { flex: 1; font-size: 11px; }
-.legend-time { font-size: 11px; color: var(--text); }
-.legend-pct  { font-size: 10px; color: var(--muted); min-width: 36px; text-align: right; }
+.legend-time { font-size: 11px; }
+.legend-pct  { font-size: 10px; color: var(--muted); min-width: 40px; text-align: right; }
 </style>
 </head>
 <body>
@@ -378,7 +386,15 @@ header {
   </div>
 
   <div id="summaryPanel">
-    <canvas id="summaryCanvas"></canvas>
+    <div class="summary-chart-area">
+      <canvas id="summaryCanvas"></canvas>
+    </div>
+    <div class="summary-controls">
+      <label class="untracked-toggle">
+        <input type="checkbox" id="showUntrackedChk" checked>
+        Show untracked
+      </label>
+    </div>
     <div class="summary-legend" id="summaryLegend"></div>
   </div>
 </div>
@@ -874,6 +890,7 @@ async function logEntry(emoji, name, startSlot, endSlot) {
 
 // ─── SUMMARY ──────────────────────────────────────────────────────────────────
 let summaryVisible = false;
+let showUntracked = true;
 
 function brightenColor(hex) {
   const r = Math.min(255, parseInt(hex.slice(1,3), 16) * 3);
@@ -903,13 +920,15 @@ function renderSummary() {
     return;
   }
 
-  // Build chart slices: tracked categories + untracked remainder
+  // Build chart slices: tracked categories + optional untracked remainder
   const chartData = [...sorted];
-  if (untrackedSlots > 0) chartData.push(['Untracked', untrackedSlots]);
+  if (showUntracked && untrackedSlots > 0) chartData.push(['Untracked', untrackedSlots]);
+  // Denominator for percentages: full day if showing untracked, else just logged
+  const denomSlots = showUntracked ? DAY_SLOTS : loggedSlots;
 
   canvas.style.display = '';
   const dpr = window.devicePixelRatio || 1;
-  const size = 220;
+  const size = Math.min(300, window.innerWidth - 32);
   canvas.width = size * dpr;
   canvas.height = size * dpr;
   canvas.style.width = size + 'px';
@@ -925,7 +944,7 @@ function renderSummary() {
   // Pass 1: draw slices
   let angle = -Math.PI / 2;
   const slices = chartData.map(([name, slots]) => {
-    const sweep = (slots / DAY_SLOTS) * Math.PI * 2;
+    const sweep = (slots / denomSlots) * Math.PI * 2;
     const color = name === 'Untracked' ? '#323438' : brightenColor(catByName(name).color);
     ctx.beginPath();
     ctx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
@@ -944,7 +963,7 @@ function renderSummary() {
 
   // Pass 2: draw slice labels (skip very small slices < 8%)
   slices.forEach(({ name, slots, mid }) => {
-    const pct = slots / DAY_SLOTS;
+    const pct = slots / denomSlots;
     if (pct < 0.08) return;
     const lx = cx + Math.cos(mid) * labelR;
     const ly = cy + Math.sin(mid) * labelR;
@@ -978,7 +997,7 @@ function renderSummary() {
     const cat = isUntracked ? null : catByName(name);
     const swatchColor = isUntracked ? '#323438' : brightenColor(cat.color);
     const mins = slots * 15;
-    const pct = Math.round(slots / DAY_SLOTS * 100);
+    const pct = Math.round(slots / denomSlots * 100);
     const timeStr = mins >= 60 ? (mins / 60).toFixed(1) + 'h' : mins + 'min';
     const row = document.createElement('div');
     row.className = 'legend-row';
@@ -998,6 +1017,11 @@ document.getElementById('summaryBtn').onclick = () => {
   document.getElementById('summaryPanel').classList.toggle('visible', summaryVisible);
   document.getElementById('summaryBtn').classList.toggle('active', summaryVisible);
   if (summaryVisible) renderSummary();
+};
+
+document.getElementById('showUntrackedChk').onchange = e => {
+  showUntracked = e.target.checked;
+  renderSummary();
 };
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
