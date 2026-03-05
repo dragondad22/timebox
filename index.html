@@ -873,7 +873,7 @@ async function logEntry(emoji, name, startSlot, endSlot) {
   renderEntries();
 
   const mins = (endSlot - startSlot + 1) * 15;
-  showToast(`${emoji} ${name} · ${mins >= 60 ? (mins/60).toFixed(1)+'h' : mins+'min'}`);
+  showToast(`${emoji} ${name} · ${mins >= 60 ? (mins/60).toFixed(2)+'h' : mins+'min'}`);
 
   try {
     setSyncState('syncing');
@@ -968,7 +968,7 @@ function renderSummary() {
     const lx = cx + Math.cos(mid) * labelR;
     const ly = cy + Math.sin(mid) * labelR;
     const mins = slots * 15;
-    const timeStr = mins >= 60 ? (mins / 60).toFixed(1) + 'h' : mins + 'min';
+    const timeStr = mins >= 60 ? (mins / 60).toFixed(2) + 'h' : mins + 'min';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = 'rgba(255,255,255,0.92)';
@@ -980,7 +980,7 @@ function renderSummary() {
   });
 
   // Center text
-  const loggedHours = (loggedSlots * 15 / 60).toFixed(1);
+  const loggedHours = (loggedSlots * 15 / 60).toFixed(2);
   ctx.fillStyle = '#e8e6e1';
   ctx.font = `bold 20px 'IBM Plex Mono', monospace`;
   ctx.textAlign = 'center';
@@ -998,7 +998,7 @@ function renderSummary() {
     const swatchColor = isUntracked ? '#323438' : brightenColor(cat.color);
     const mins = slots * 15;
     const pct = Math.round(slots / denomSlots * 100);
-    const timeStr = mins >= 60 ? (mins / 60).toFixed(1) + 'h' : mins + 'min';
+    const timeStr = mins >= 60 ? (mins / 60).toFixed(2) + 'h' : mins + 'min';
     const row = document.createElement('div');
     row.className = 'legend-row';
     row.innerHTML = `
