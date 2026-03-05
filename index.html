@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>TimeBox</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAAAIADNAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAAJRJREFUeJylU8ENgCAMPIgLaPwyAHswNnswgF+jI+hDa0opRvBe0NxdDtoa3Bin+UAD9m01AGB7xFxjauK0hOzuXVSNhpqQBGkJ8C4WddWAyBqkIcF+if+Gx0BGrZlwjprAu5jF/ZxACvg7eV2aZgbyA+nO65KTzcFbF2octQstKCaxdZB+j7IB+pYJuDbS0qFHDAAn4x5U+ZvrDjMAAAAASUVORK5CYII=">
+  <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABBklEQVR4nM2XwQ2DMAxFHasLtOqVAdgjY7NHBuCKYIT2RGVZcWxMavinQoT/y29w3QRMz9f7w+/11LYuiV5jpHnNA6WFKAiMNucQ6QpzqofnoTLn6v1xmP4LsBtTozLn33VtvQuAtbAHRAWgO7SKgmjPYmvRY85BpPNiAoiQCHB297u0FMwJaFF6VQWQdl/m7AJppWDuA/Rk82Jnvq7Dh3AcJjEdj8QEPF2tVecwQI83gNaRQNx9gAN6gcWf4159QKt1305o6eMWaUneNwGA8ylYzpFpJmz1hJpJ14GEFtIKe5qXayruOZRePpYj/68WqW1dEu4frjAHIK9hJAT1QmkhwhwA4AusGJXx/nSXZQAAAABJRU5ErkJggg==">
+  <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAlElEQVR4nKVTwQ2AIAw8iAto/DIAezA2ezCAX6Mj6ENrSilG8F7Q3F0O2hrcGKf5QAP2bTUAYHvEXGNq4rSE7O5dVI2GmpAEaQnwLhZ11YDIGqQhwX6J/4bHQEatmXCOmsC7mMX9nEAK+Dt5XZpmBvID6c7rkpPNwVsXahy1Cy0oJrF1kH6PsgH6lgm4NtLSoUcMACfjHlT5m+sOMwAAAABJRU5ErkJggg==">
+  <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
@@ -377,8 +381,8 @@ const TOTAL_SLOTS = 96;
 const SLOT_H      = 18;
 
 const CATEGORIES = [
-  { emoji: '💼', name: 'Zoolytix',      color: '#1e4a30' },
-  { emoji: '🔪', name: 'Alpaca Werks',  color: '#4a1e1e' },
+  { emoji: '💼', name: 'Work',      color: '#1e4a30' },
+  { emoji: '🏢', name: 'Business',  color: '#4a1e1e' },
   { emoji: '🤝', name: 'Meetings',      color: '#1e2e4a' },
   { emoji: '🧠', name: 'Deep Work',     color: '#2e1e4a' },
   { emoji: '📧', name: 'Email/Admin',   color: '#3a3010' },
