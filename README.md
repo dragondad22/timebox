@@ -15,13 +15,15 @@ A mobile-first time tracking web app that syncs to Google Calendar. Log your day
 
 | Emoji | Name | | Emoji | Name |
 |-------|------|-|-------|------|
-| 💼 | Work | | 📚 | Learning |
-| 🏢 | Business | | ☕ | Break |
-| 🤝 | Meetings | | 🏃 | Exercise |
-| 🧠 | Deep Work | | 😴 | Sleep |
-| 📧 | Email/Admin | | 🍽️ | Meal |
-| 🌱 | Garden | | 📺 | Entertainment |
-| 🎨 | Creating | | 📌 | Custom |
+| 🪥 | Personal Care | | ☕ | Break |
+| 💼 | Work | | 🏃 | Exercise |
+| 🏢 | Business | | 😴 | Sleep |
+| 🤝 | Meetings | | 🍽️ | Meal/Meal Prep |
+| 🧠 | Deep Work | | 📺 | Entertainment |
+| 📧 | Email/Admin | | 📺 | Family/Friends |
+| 🛒 | Errands | | 📌 | Custom |
+| 🎨 | Creating | | | |
+| 📚 | Learning | | | |
 
 ## Setup
 
