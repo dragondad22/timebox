@@ -20,9 +20,9 @@ A mobile-first time tracking web app that syncs to Google Calendar. Log your day
 | 🏢 | Business | | 😴 | Sleep |
 | 🤝 | Meetings | | 🍽️ | Meal/Meal Prep |
 | 🧠 | Deep Work | | 📺 | Entertainment |
-| 📧 | Email/Admin | | 📺 | Family/Friends |
-| 🛒 | Errands | | 📌 | Custom |
-| 🎨 | Creating | | | |
+| 📧 | Email/Admin | | 🏡 | Housework |
+| 🛒 | Errands | | 👨‍👩‍👧‍👦 | Family/Friends |
+| 🎨 | Creating | | 📌 | Custom |
 | 📚 | Learning | | | |
 
 ## Setup
