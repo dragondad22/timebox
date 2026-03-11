@@ -457,20 +457,56 @@ let entries      = [];
 let selStart = null, selEnd = null, isDragging = false;
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
+function showSignIn() {
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+let refreshTimer = null;
+function scheduleTokenRefresh() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  const delay = (tokenExpiry - Date.now()) - 5 * 60 * 1000;
+  if (delay > 0) refreshTimer = setTimeout(() => silentRefresh(), delay);
+}
+
+function silentRefresh() {
+  return new Promise(resolve => {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      prompt: '',
+      callback: (resp) => {
+        if (resp.access_token) {
+          accessToken = resp.access_token;
+          tokenExpiry  = Date.now() + (resp.expires_in * 1000);
+          localStorage.setItem('tb_token', JSON.stringify({ token: accessToken, expiry: tokenExpiry }));
+          scheduleTokenRefresh();
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      },
+      error_callback: () => resolve(false)
+    });
+    client.requestAccessToken();
+  });
+}
+
 function initAuth() {
-  // Try to restore token from localStorage
   const saved = localStorage.getItem('tb_token');
   if (saved) {
     const parsed = JSON.parse(saved);
     if (parsed.expiry > Date.now() + 60000) {
       accessToken = parsed.token;
       tokenExpiry  = parsed.expiry;
+      scheduleTokenRefresh();
       showApp();
       return;
     }
+    // Token expired — try silent refresh before showing login
+    silentRefresh().then(ok => { if (ok) showApp(); else showSignIn(); });
+    return;
   }
-  // Show sign-in screen
-  document.getElementById('authScreen').style.display = 'flex';
+  showSignIn();
 }
 
 document.getElementById('googleSignInBtn').onclick = () => {
@@ -482,6 +518,7 @@ document.getElementById('googleSignInBtn').onclick = () => {
       accessToken = resp.access_token;
       tokenExpiry  = Date.now() + (resp.expires_in * 1000);
       localStorage.setItem('tb_token', JSON.stringify({ token: accessToken, expiry: tokenExpiry }));
+      scheduleTokenRefresh();
       showApp();
     }
   });
@@ -497,6 +534,7 @@ function showApp() {
 
 function signOut() {
   if (!confirm('Sign out of TimeBox?')) return;
+  if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
   google.accounts.oauth2.revoke(accessToken, () => {});
   localStorage.removeItem('tb_token');
   accessToken = null;
@@ -507,24 +545,9 @@ function signOut() {
 document.getElementById('syncDot').onclick = signOut;
 
 async function getToken() {
-  // Refresh if within 2 minutes of expiry
   if (Date.now() > tokenExpiry - 120000) {
-    return new Promise((resolve) => {
-      const client = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        prompt: '',
-        callback: (resp) => {
-          if (resp.access_token) {
-            accessToken = resp.access_token;
-            tokenExpiry  = Date.now() + (resp.expires_in * 1000);
-            localStorage.setItem('tb_token', JSON.stringify({ token: accessToken, expiry: tokenExpiry }));
-          }
-          resolve(accessToken);
-        }
-      });
-      client.requestAccessToken();
-    });
+    const ok = await silentRefresh();
+    if (!ok) throw new Error('Session expired — please sign in again');
   }
   return accessToken;
 }
