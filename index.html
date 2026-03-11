@@ -562,6 +562,7 @@ async function fetchDayEvents(date) {
       maxResults: '250'
     });
     const data = await gcalRequest('GET', `/calendars/${calId}/events?${params}`);
+    const nextDay = new Date(date); nextDay.setDate(nextDay.getDate() + 1); nextDay.setHours(0,0,0,0);
     entries = (data.items || [])
       .filter(ev => ev.summary?.startsWith(TB_PREFIX))
       .map(ev => {
@@ -570,7 +571,9 @@ async function fetchDayEvents(date) {
         const name  = body.slice([...body][0].length + ([...body][1] === ' ' ? 1 : 0)).trim();
         const startD = new Date(ev.start.dateTime);
         const endD   = new Date(ev.end.dateTime);
-        const endSlot = Math.max(dateToSlot(startD), dateToSlot(endD) - 1);
+        // If event ends at midnight (next day), treat as end of day (slot 96)
+        const endSlotRaw = endD >= nextDay ? TOTAL_SLOTS : dateToSlot(endD);
+        const endSlot = Math.max(dateToSlot(startD), endSlotRaw - 1);
         return { startSlot: dateToSlot(startD), endSlot, name, emoji, eventId: ev.id };
       });
     setSyncState('ok');
@@ -829,7 +832,7 @@ function attachListeners() {
 
 // ─── PICKER ───────────────────────────────────────────────────────────────────
 function openPicker(startSlot, endSlot) {
-  const endTime = slotToTime(Math.min(endSlot + 1, TOTAL_SLOTS - 1));
+  const endTime = endSlot + 1 >= TOTAL_SLOTS ? '12:00am' : slotToTime(endSlot + 1);
   document.getElementById('pickerRange').textContent = startSlot === endSlot
     ? `${slotToTime(startSlot)} (15 min)`
     : `${slotToTime(startSlot)} – ${endTime}`;
